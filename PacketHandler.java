@@ -36,7 +36,7 @@ public class PacketHandler implements IPacketHandler {
 				setBlock(player, index, x, y, z);
 			}
 		} catch (IOException e) {
-			// TODO ©“®¶¬‚³‚ê‚½ catch ƒuƒƒbƒN
+			// TODO è‡ªå‹•ç”Ÿæˆã•ã‚ŒãŸ catch ãƒ–ãƒ­ãƒƒã‚¯
 			e.printStackTrace();
 		}
 	}
@@ -44,10 +44,8 @@ public class PacketHandler implements IPacketHandler {
 	private void setBlock(Player player, int index, int x, int y, int z) {
 		EntityPlayerMP thePlayer = (EntityPlayerMP) player;
 		World theWorld = thePlayer.worldObj;
-		if(theWorld.setBlockAndMetadataWithNotify(x, y, z, Block.torchWood.blockID, 0, 3)) {
-			ItemStack itemStack = thePlayer.inventory.getStackInSlot(index);
-			itemStack.stackSize--;
-			thePlayer.inventory.setInventorySlotContents(index, itemStack);
+		if(theWorld.setBlock(x, y, z, Block.torchWood.blockID, 0, 3)) {
+			thePlayer.inventory.decrStackSize(index, 1);
 			thePlayer.inventory.onInventoryChanged();
 			thePlayer.inventoryContainer.detectAndSendChanges();
 		}

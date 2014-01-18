@@ -61,7 +61,7 @@ public class ClientTickHandler implements ITickHandler {
 
 	@Override
 	public String getLabel() {
-		// TODO ©“®¶¬‚³‚ê‚½ƒƒ\ƒbƒhEƒXƒ^ƒu
+		// TODO è‡ªå‹•ç”Ÿæˆã•ã‚ŒãŸãƒ¡ã‚½ãƒƒãƒ‰ãƒ»ã‚¹ã‚¿ãƒ–
 		return null;
 	}
 
@@ -123,31 +123,14 @@ public class ClientTickHandler implements ITickHandler {
 						continue;
 					}
 
-					//if(underBlock.canPlaceBlockOnSide(mc.theWorld, x, y-1, z, 0) == false) {
-					//	continue;
-					//}
 					if(mc.theWorld.getBlockMaterial(x, y-1, z).isSolid() == false) {
 						continue;
 					}
 					if(blockID == Block.snow.blockID || mc.theWorld.isAirBlock(x, y, z)) {
 						ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(index);
-						//if(itemStack.tryPlaceItemIntoWorld(mc.thePlayer, mc.theWorld, x, y, z, 0, 0, 0, 0)) {
-						//Block.torchWood.onBlockAdded(mc.theWorld, x, y, z);
-
-						//itemStack = itemStack.useItemRightClick(mc.theWorld, mc.thePlayer);
-						if(mc.theWorld.setBlockAndMetadataWithNotify(x, y, z, Block.torchWood.blockID, 0, 3)) {
+						if(mc.theWorld.setBlock(x, y, z, Block.torchWood.blockID, 0, 3)) {
 							sendPacket(EnumCommand.TORCH, index, new Coord(x,y,z));
-							itemStack.stackSize--;
-							mc.thePlayer.inventory.setInventorySlotContents(index, itemStack);
-
-
-							//mc.thePlayer.inventoryContainer.putStackInSlot(index, itemStack);
-							//mc.thePlayer.inventoryContainer.detectAndSendChanges();
 							return;
-							//mc.thePlayer.inventory.decrStackSize(index, 1);
-							//mc.thePlayer.inventory.onInventoryChanged();
-							//mc.thePlayer.sendQueue.addToSendQueue(new Packet15Place(-1, -1, -1, 255, itemStack, 0.0F, 0.0F, 0.0F));
-							//setTorch = true;
 						}
 					}
 				}
@@ -172,7 +155,7 @@ public class ClientTickHandler implements ITickHandler {
 			Minecraft mc = Minecraft.getMinecraft();
 			mc.thePlayer.sendQueue.addToSendQueue(packet);
 		} catch (IOException e) {
-			// TODO ©“®¶¬‚³‚ê‚½ catch ƒuƒƒbƒN
+			// TODO è‡ªå‹•ç”Ÿæˆã•ã‚ŒãŸ catch ãƒ–ãƒ­ãƒƒã‚¯
 			e.printStackTrace();
 		}
 	}
