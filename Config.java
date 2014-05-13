@@ -1,15 +1,10 @@
 package droptorch;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-
-import net.minecraft.network.INetworkManager;
-import net.minecraft.network.packet.Packet250CustomPayload;
-import net.minecraftforge.common.Configuration;
 import cpw.mods.fml.common.FMLLog;
+import net.minecraftforge.common.config.Configuration;
+
+import java.io.File;
+import org.apache.logging.log4j.Level;
 
 public class Config {
 	public static final String channel = "dt";
@@ -35,7 +30,7 @@ public class Config {
 			}
 			cfg.save();
 		} catch (Exception e) {
-			FMLLog.log(Level.SEVERE, e, "DropTorch load config exception");
+			FMLLog.log(Level.ERROR, e, "DropTorch load config exception");
 		} finally {
 			cfg.save();
 		}
@@ -55,6 +50,4 @@ public class Config {
 		return mode;
 	}
 
-	public void sendTargetToPlayer(INetworkManager manager) {
-	}
 }

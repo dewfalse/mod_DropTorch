@@ -9,9 +9,13 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.item.Item;
@@ -19,15 +23,8 @@ import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemShears;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
-import net.minecraft.network.packet.Packet14BlockDig;
-import net.minecraft.network.packet.Packet15Place;
-import net.minecraft.network.packet.Packet250CustomPayload;
-import net.minecraft.src.ModLoader;
-import net.minecraft.util.EnumMovingObjectType;
-import cpw.mods.fml.common.ITickHandler;
-import cpw.mods.fml.common.TickType;
 
-public class ClientTickHandler implements ITickHandler {
+public class ClientTickHandler  {
 
 	int prev_blockHitWait = 0;
 	int targetBlockId = 0;
@@ -40,40 +37,25 @@ public class ClientTickHandler implements ITickHandler {
 
 	int count = 0;
 
-	@Override
-	public void tickStart(EnumSet<TickType> type, Object... tickData) {
-	}
-
-	@Override
-	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
-		if (type.equals(EnumSet.of(TickType.CLIENT))) {
-			GuiScreen guiscreen = Minecraft.getMinecraft().currentScreen;
-			if (guiscreen == null) {
-				onTickInGame();
-			}
-		}
-	}
-
-	@Override
-	public EnumSet<TickType> ticks() {
-		return EnumSet.of(TickType.CLIENT);
-	}
-
-	@Override
-	public String getLabel() {
-		// TODO 自動生成されたメソッド・スタブ
-		return null;
-	}
+    @SubscribeEvent
+    public void tickEnd(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && !FMLClientHandler.instance().isGUIOpen(GuiChat.class)) {
+            onTickInGame();
+        }
+    }
 
 	private int getTorchIndex() {
 		Minecraft mc = Minecraft.getMinecraft();
+        if(mc == null) return -1;
+        if(mc.thePlayer == null) return -1;
 		int max = DropTorch.config.use_inventory ? mc.thePlayer.inventory.mainInventory.length : 9;
 		for(int iInventory = 0; iInventory < max; iInventory++) {
 			ItemStack itemStack = mc.thePlayer.inventory.mainInventory[iInventory];
 			if(itemStack == null) {
 				continue;
 			}
-			if(itemStack.itemID == Block.torchWood.blockID) {
+            Block block = Block.getBlockFromItem(itemStack.getItem());
+			if(block == Block.getBlockFromName("torch")) {
 				return iInventory;
 			}
 		}
@@ -100,8 +82,8 @@ public class ClientTickHandler implements ITickHandler {
 			for(int z = posZ - width; z <= posZ + width; ++z) {
 				boolean setTorch = false;
 				for(int y = posY - 3; y <= posY + 1; ++y) {
-					int blockID = mc.theWorld.getBlockId(x, y, z);
-					if(blockID == Block.torchWood.blockID) {
+					Block block = mc.theWorld.getBlock(x, y, z);
+					if(block == Block.getBlockFromName("torch")) {
 						setTorch = true;
 					}
 					if(setTorch) continue;
@@ -116,19 +98,18 @@ public class ClientTickHandler implements ITickHandler {
 					if( (x_mod != DropTorch.config.x_plus) || (z_mod != DropTorch.config.z_plus) ) {
 						continue;
 					}
-					int underBlockID = mc.theWorld.getBlockId(x, y-1, z);
-					Block underBlock = Block.blocksList[underBlockID];
+					Block underBlock = mc.theWorld.getBlock(x, y-1, z);
 					if(underBlock == null) continue;
 					if(underBlock.canPlaceTorchOnTop(mc.theWorld, x, y - 1, z) == false) {
 						continue;
 					}
 
-					if(mc.theWorld.getBlockMaterial(x, y-1, z).isSolid() == false) {
+					if(underBlock.getMaterial().isSolid() == false) {
 						continue;
 					}
-					if(blockID == Block.snow.blockID || mc.theWorld.isAirBlock(x, y, z)) {
+					if(block == Block.getBlockFromName("snow") || mc.theWorld.isAirBlock(x, y, z)) {
 						ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(index);
-						if(mc.theWorld.setBlock(x, y, z, Block.torchWood.blockID, 0, 3)) {
+						if(mc.theWorld.setBlock(x, y, z, Block.getBlockFromName("torch"), 0, 3)) {
 							sendPacket(EnumCommand.TORCH, index, new Coord(x,y,z));
 							return;
 						}
@@ -139,25 +120,7 @@ public class ClientTickHandler implements ITickHandler {
 	}
 
 	private void sendPacket(EnumCommand command, int index, Coord pos) {
-		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		DataOutputStream stream = new DataOutputStream(bytes);
-		try {
-			stream.writeUTF(command.toString());
-			stream.writeInt(index);
-			stream.writeInt(pos.x);
-			stream.writeInt(pos.y);
-			stream.writeInt(pos.z);
-
-			Packet250CustomPayload packet = new Packet250CustomPayload();
-			packet.channel = Config.channel;
-			packet.data = bytes.toByteArray();
-			packet.length = packet.data.length;
-			Minecraft mc = Minecraft.getMinecraft();
-			mc.thePlayer.sendQueue.addToSendQueue(packet);
-		} catch (IOException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		DropTorch.packetPipeline.sendPacketToServer(new PacketHandler(command, index, pos));
 	}
 
 }

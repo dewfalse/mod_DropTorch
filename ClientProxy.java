@@ -1,14 +1,12 @@
 package droptorch;
 
-import cpw.mods.fml.client.registry.KeyBindingRegistry;
-import cpw.mods.fml.common.registry.TickRegistry;
-import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ClientProxy extends CommonProxy {
 
 	@Override
 	void init() {
-		TickRegistry.registerTickHandler(new ClientTickHandler(), Side.CLIENT);
-		KeyBindingRegistry.registerKeyBinding(new ModeKeyHandler());
+        FMLCommonHandler.instance().bus().register(new ClientTickHandler());
+        FMLCommonHandler.instance().bus().register(new ModeKeyHandler());
 	}
 }
